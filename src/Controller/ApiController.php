@@ -3,45 +3,47 @@
 namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-// use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class ApiController extends AbstractController
 {
     // METHODE 1
     #[Route('/api/regions', name: 'api')]
-    public function addRegionByApi(SerializerInterface $serializer): Response
+    public function addRegionByApi(SerializerInterface $serializer, EntityManagerInterface $em): Response
     {
         // Recuperation des Régions en Json
         $regionJson=file_get_contents("https://geo.api.gouv.fr/regions");
         //  Decode Json en Array
-        $regionTab=$serializer->decode($regionJson, "json");
+        // $regionTab=$serializer->decode($regionJson, "json");
         // Démoralise Array to Object
-        $regionObject = $serializer->denormalize($regionTab, 'App\Entity\Region[]');
+        // $regionObject = $serializer->denormalize($regionTab, 'App\Entity\Region[]');
 
         // METHODE 2
         // deserialize JSON to Object
-        // $regionObject = $serializer->deserialize($regionJson, 'App\Entity\Region[]', 'json');
+        $regionObject = $serializer->deserialize($regionJson, 'App\Entity\Region[]', 'json');
         // dd($regionObject);
 
-        // foreach ($regionObject as $region) {
-        //     $em->persist($region);
-        // }
+        foreach ($regionObject as $region) {
+            $em->persist($region);
+        }
 
-        // $em->flush();
+        $em->flush();
 
-        // return new JsonResponse("sucess", Response::HTTP_CREATED, [], true);
+        return new JsonResponse("sucess", Response::HTTP_CREATED, [], true);
 
 
-        dd($regionJson);
-        return $this->json([
-            'message' => 'Welcom to your new controller!',
-            'path' => 'src/Controller/ApiController.php',
-        ]);
+        // dd($regionJson);
+        // return $this->json([
+        //     'message' => 'Welcom to your new controller!',
+        //     'path' => 'src/Controller/ApiController.php',
+        // ]);
     }
 
+    // #[Route('/api/show_regions', name:'get_regions_api_BD')]
     #[Route('/api/show_regions', name: 'get_regions_api_BD')]
     public function showRegion(SerializerInterface $serializer, RegionRepository $regionRepository)
     {
