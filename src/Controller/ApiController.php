@@ -8,12 +8,13 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ApiController extends AbstractController
 {
-    // METHODE 1
+    // METHODE 1 POUR ENTITE REGIONS ***************************
     #[Route('/api/regions', name: 'api')]
-    public function addRegionByApi(SerializerInterface $serializer, EntityManagerInterface $em): Response
+    public function addRegionByApi(SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator): Response
     {
         // Recuperation des Régions en Json
         $regionJson=file_get_contents("https://geo.api.gouv.fr/regions");
@@ -43,9 +44,8 @@ class ApiController extends AbstractController
         // ]);
     }
 
-    // #[Route('/api/show_regions', name:'get_regions_api_BD')]
     #[Route('/api/show_regions', name: 'get_regions_api_BD')]
-    public function showRegion(SerializerInterface $serializer, RegionRepository $regionRepository)
+    public function showRegion(SerializerInterface $serializer, RegionRepository $regionRepository, ValidatorInterface $validator)
     {
         // Récuperer tous les régions dans la base de données
         $regionsObject=$regionRepository->findAll();
@@ -57,9 +57,60 @@ class ApiController extends AbstractController
     }
 
     #[Route('/api/post_regions', name: 'post_regions_api_BD')]
-    public function addRegion(Request $request, SerializerInterface $serializer, EntityManagerInterface $em){
+    public function addRegion(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator){
         // Récupérer le contenu du bout
         $regionJson = $request->getContent();
         dd($regionJson);
     }
+
+
+    // POUR ENTITE DEPARTEMENT *******************************
+    #[Route('/api/departement', name: 'api')]
+    public function addDepartementByApi(SerializerInterface $serializer, EntityManagerInterface $em): Response
+    {
+        // Recuperation des Départements en Json
+        $departementJson=file_get_contents("https://geo.api.gouv.fr/departements");
+
+        //  Decode Json en Array
+        $departementTab=$serializer->decode($departementJson, "json");
+
+        // Démoralise Array to Object
+        $departementObject = $serializer->denormalize($departementTab, 'App\Entity\Departement[]');
+
+
+        dd($departementJson);
+        return $this->json([
+            'message' => 'Welcom to your new controller!',
+            'path' => 'src/Controller/ApiController.php',
+        ]);
+    }
+
+
+
+
+
+
+    // POUR ENTITE COMMUNE *************************************
+    #[Route('/api/commune', name: 'api')]
+    public function addcommuneByApi(SerializerInterface $serializer, EntityManagerInterface $em): Response
+    {
+        // Recuperation des Départements en Json
+        $communeJson=file_get_contents("https://geo.api.gouv.fr/communes");
+
+        //  Decode Json en Array
+        $communeTab=$serializer->decode($communeJson, "json");
+
+        // Démoralise Array to Object
+        $communeObject = $serializer->denormalize($communeTab, 'App\Entity\Commune[]');
+
+
+        dd($communeJson);
+        return $this->json([
+            'message' => 'Welcom to your new controller!',
+            'path' => 'src/Controller/ApiController.php',
+        ]);
+    }
+
+
+
 }
