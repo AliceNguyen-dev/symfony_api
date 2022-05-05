@@ -3,46 +3,46 @@
 namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+// use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ApiController extends AbstractController
 {
     // METHODE 1 POUR ENTITE REGIONS ***************************
-    #[Route('/api/regions', name: 'api')]
-    public function addRegionByApi(SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator): Response
+    #[Route('/api/region', name: 'api')]
+    public function addRegionByApi(SerializerInterface $serializer, EntityManagerInterface $em): Response
     {
-        // Recuperation des Régions en Json
-        $regionJson=file_get_contents("https://geo.api.gouv.fr/regions");
-        //  Decode Json en Array
-        // $regionTab=$serializer->decode($regionJson, "json");
-        // Démoralise Array to Object
-        // $regionObject = $serializer->denormalize($regionTab, 'App\Entity\Region[]');
+            // Recuperation des Regions en Json
+            $regionJson = file_get_contents("https://geo.api.gouv.fr/regions");
 
-        // METHODE 2
-        // deserialize JSON to Object
-        $regionObject = $serializer->deserialize($regionJson, 'App\Entity\Region[]', 'json');
-        // dd($regionObject);
+/*
+    // Method 1
+            // Decode Json to Array
+            $regionTab = $serializer->decode($regionJson,"json");
 
-        foreach ($regionObject as $region) {
-            $em->persist($region);
-        }
-
-        $em->flush();
-
-        return new JsonResponse("sucess", Response::HTTP_CREATED, [], true);
+            // Denormalize Array to Object
+            $regionObject = $serializer->denormalize($regionTab, "App\Entity\Region[]");
+*/
 
 
-        // dd($regionJson);
-        // return $this->json([
-        //     'message' => 'Welcom to your new controller!',
-        //     'path' => 'src/Controller/ApiController.php',
-        // ]);
+    // Method 2 
+            // Deserialize JSON to Object
+            $regionObject = $serializer->deserialize($regionJson,'App\Entity\Region[]','json');
+
+             foreach ($regionObject as $region) {
+                 $em->persist($region);
+             }
+            $em->flush();
+
+
+        return new JsonResponse("success", Response::HTTP_CREATED, [], true);
     }
+
 
     #[Route('/api/show_regions', name: 'get_regions_api_BD')]
     public function showRegion(SerializerInterface $serializer, RegionRepository $regionRepository, ValidatorInterface $validator)
