@@ -66,23 +66,29 @@ class ApiController extends AbstractController
 
     // POUR ENTITE DEPARTEMENT *******************************
     #[Route('/api/departement', name: 'api')]
-    public function addDepartementByApi(SerializerInterface $serializer, EntityManagerInterface $em): Response
+    public function addDepartement(Request $request,ValidatorInterface $validator,
+    SerializerInterface $serializer,RegionRepository $repo)
     {
-        // Recuperation des Départements en Json
-        $departementJson=file_get_contents("https://geo.api.gouv.fr/departements");
+        //Recuperation du Contenu Json
+        $departementJson = $request->getContent();
 
-        //  Decode Json en Array
-        $departementTab=$serializer->decode($departementJson, "json");
+        //Transformation du contenu en Tableau
+        $departementTable=$serializer->decode($departementJson,"json" );
 
-        // Démoralise Array to Object
-        $departementObject = $serializer->denormalize($departementTab, 'App\Entity\Departement[]');
-
-
-        dd($departementJson);
-        return $this->json([
-            'message' => 'Welcom to your new controller!',
-            'path' => 'src/Controller/ApiController.php',
-        ]);
+        //Recuperation de l'objet Region
+        $region =$repo->find((int)$departementTable["region"]["id"]);
+        $departementsObject=$serializer->deserialize($request->getContent(), Departement::class,'json');
+        $departementsObject->setRegion($region);
+        $errors = $validator->validate($departementsObject);
+        
+        if (count($errors) > 0) {
+        $errorsString =$serializer->serialize($errors,"json");
+        return new JsonResponse( $errorsString ,Response::HTTP_BAD_REQUEST,[],true);
+        }
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($departementsObject);
+        $entityManager->flush();
+        return new JsonResponse("succes",Response::HTTP_CREATED,[],true);
     }
 
 
